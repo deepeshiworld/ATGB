@@ -19,14 +19,19 @@ public class MapRouteFinder implements Runnable {
     private String sourceString;
     private String destinationString;
     private int mode = -1;
+    
     private volatile boolean hasExceptionOccurred;
     private volatile Exception exception;
     private volatile boolean isThreadCompleted;
 
+    private static final int MODE_LOCATION = 1;
+    private static final int MODE_PATH = 2;
+
+
     private MapRouteFinder(final LatLng source, final LatLng destination) {
         this.sourceLocation = source;
         this.destinationLocation = destination;
-        this.mode = 1;
+        this.mode = MODE_LOCATION;
         new Thread(this).start();
     }
 
@@ -34,7 +39,7 @@ public class MapRouteFinder implements Runnable {
     private MapRouteFinder(final String source, final String destination) {
         this.sourceString = source;
         this.destinationString = destination;
-        this.mode = 2;
+        this.mode = MODE_PATH;
         new Thread(this).start();
     }
 
@@ -127,8 +132,7 @@ public class MapRouteFinder implements Runnable {
         GeocodingResult[] destinations = null;
         try {
 
-            if (mode == 1) {
-
+            if (mode == MODE_LOCATION) {
                 sources = GeocodingApi.reverseGeocode(MapConfig.mapContext, sourceLocation).await();
                 if (sources == null) {
                     throw new FlockException("no location present for given source coordinates");
@@ -138,7 +142,7 @@ public class MapRouteFinder implements Runnable {
                 if (destinations == null) {
                     throw new FlockException("no location present for given destination coordinates");
                 }
-            } else if (mode == 2) {
+            } else if (mode == MODE_PATH) {
 
                 sources = GeocodingApi.geocode(MapConfig.mapContext, sourceString).await();
                 if (sources == null) {
@@ -180,7 +184,19 @@ public class MapRouteFinder implements Runnable {
                         distance = leg.distance.inMeters;
                     }
                 }
-                this.mapRoutes.add(MapRoute.createRoute(distance, duration, warnings));
+                MapRoute mapRoute = MapRoute.create();
+                mapRoute.warnings(warnings);
+                mapRoute.duration(duration);
+                mapRoute.distance(distance);
+                mapRoute.sourceLat(sources[0].geometry.location.lat);
+                mapRoute.sourceLng(sources[0].geometry.location.lng);
+                mapRoute.sourceID(sources[0].placeId);
+                mapRoute.sourceName(sources[0].formattedAddress);
+                mapRoute.destinationLat(destinations[0].geometry.location.lat);
+                mapRoute.destinationLng(destinations[0].geometry.location.lng);
+                mapRoute.destinationID(destinations[0].placeId);
+                mapRoute.destinationName(destinations[0].formattedAddress);
+                this.mapRoutes.add(mapRoute);
             }
         } catch (Exception e) {
             e.printStackTrace();
