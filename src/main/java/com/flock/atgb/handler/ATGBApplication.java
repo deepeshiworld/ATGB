@@ -22,15 +22,15 @@ import javax.servlet.http.HttpServletRequest;
 
 @SpringBootApplication(scanBasePackages = {"com.flock.atgb"})
 @Controller
-public class AtgbApplication implements IAuthenticatedUrlRequestHandler {
+public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(AtgbApplication.class.getCanonicalName());
+    private static final Logger logger = LoggerFactory.getLogger(ATGBApplication.class.getCanonicalName());
 
     @Autowired
     FlockEventService flockEventService;
 
     public static void main(String[] args) {
-        SpringApplication.run(AtgbApplication.class, args);
+        SpringApplication.run(ATGBApplication.class, args);
     }
 
 
@@ -40,6 +40,8 @@ public class AtgbApplication implements IAuthenticatedUrlRequestHandler {
                                                      HttpServletRequest request) {
 
         logger.info("Flock Event Received : ", payload);
+        String responseMsg = StringUtils.EMPTY;
+        boolean responseStatus = true;
         try {
             String x_flock_event_token = headers.getFirst(FlockConstants.X_FLOCK_EVENT_TOKEN);
             if (StringUtils.isBlank(x_flock_event_token)) {
@@ -69,7 +71,12 @@ public class AtgbApplication implements IAuthenticatedUrlRequestHandler {
             switch (flockEvent) {
                 case APP_INSTALL:
 
-                    flockEventService.processAppInstall();
+                    responseStatus = flockEventService.processAppInstall(payload);
+                    if (responseStatus) {
+                        responseMsg = "User Installed Successfully";
+                    } else {
+                        responseMsg = "Unable to install user Successfully";
+                    }
                     break;
                 case APP_UNINSTALL:
 
@@ -84,7 +91,10 @@ public class AtgbApplication implements IAuthenticatedUrlRequestHandler {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(payload);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(payload);
+        if (flockEventService.processAppInstall(payload)) {
+            return ResponseEntity.status(HttpStatus.OK).body(responseMsg);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(responseMsg);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/hello")
