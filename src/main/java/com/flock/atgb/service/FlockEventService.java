@@ -21,6 +21,7 @@ public class FlockEventService {
 
         try {
             FlockUser flockUser = gson.fromJson(payload, FlockUser.class);
+            flockUser.setActive(true);
             return flockDbService.addUserInDb(flockUser);
         } catch (JsonSyntaxException e) {
             e.printStackTrace();

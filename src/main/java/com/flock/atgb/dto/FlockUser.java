@@ -12,6 +12,7 @@ public class FlockUser {
 
     private String userId;
     private String token;
+    private boolean isActive;
 
     public String getUserId() {
         return userId;
@@ -29,6 +30,14 @@ public class FlockUser {
         this.token = token;
     }
 
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
     public String toJson() {
         JSONObject obj = toJsonObject();
         return obj.toJSONString();
@@ -39,7 +48,7 @@ public class FlockUser {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("userId", this.userId);
         jsonObj.put("token", this.token);
-
+        jsonObj.put("isActive", this.isActive);
         return jsonObj;
     }
 

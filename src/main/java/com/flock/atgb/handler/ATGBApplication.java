@@ -39,7 +39,7 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
     public ResponseEntity<Object> flockEventListener(@RequestHeader MultiValueMap<String, String> headers, @RequestBody String payload,
                                                      HttpServletRequest request) {
 
-        logger.info("Flock Event Received : ", payload);
+        logger.info("Flock Event Received [{}] ", payload);
         String responseMsg = StringUtils.EMPTY;
         boolean responseStatus = true;
         try {
@@ -111,6 +111,6 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
 
     @Override
     public boolean authenticate(String flockEventToken) {
-        return false;
+        return true;
     }
 }
