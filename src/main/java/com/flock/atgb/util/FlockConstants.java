@@ -14,6 +14,7 @@ public class FlockConstants {
 
 
     // Database constants
-    public static final String DBNAME           = "flockDb";
+    public static final String FLOCK_DB         = "flockDb";
     public static final String USER             = "user";
+    public static final String TRAFFIC          = "trafficUpdate";
 }

@@ -1,10 +1,14 @@
 package com.flock.atgb.handler;
 
+import co.flock.FlockApiClient;
+import co.flock.model.message.Message;
+import co.flock.model.message.attachments.*;
+import com.flock.atgb.com.flock.atgb.google.MapRoute;
+import com.flock.atgb.com.flock.atgb.google.MapRouteFinder;
 import com.flock.atgb.dto.FlockEvent;
+import com.flock.atgb.exception.FlockException;
 import com.flock.atgb.service.FlockEventService;
 import com.flock.atgb.util.FlockConstants;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,10 +24,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.bind.DatatypeConverter;
+import java.util.List;
 
 @SpringBootApplication(scanBasePackages = {"com.flock.atgb"})
 @Controller
@@ -37,7 +39,6 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
     public static void main(String[] args) {
         SpringApplication.run(ATGBApplication.class, args);
     }
-
 
     @RequestMapping(method = RequestMethod.POST, value = "/events")
     @ResponseBody
@@ -65,7 +66,7 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
             JSONParser parser = new JSONParser();
             JSONObject jObj = (JSONObject) parser.parse(payload);
             String eventName = (String) jObj.get("name");
-            logger.info("Event Name : ", eventName);
+            logger.info("Event Name [{}] ", eventName);
 
             FlockEvent flockEvent = FlockEvent.getFlockEventByName(eventName);
 
@@ -80,16 +81,29 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
                     if (responseStatus) {
                         responseMsg = "User Installed Successfully";
                     } else {
-                        responseMsg = "Unable to install user Successfully";
+                        responseMsg = "Unable to install User Successfully";
                     }
                     break;
                 case APP_UNINSTALL:
+                    //TODO isActive False
+                    responseStatus = flockEventService.processAppUninstall(jObj);
+                    if (responseStatus) {
+                        responseMsg = "User Installed Successfully";
+                    } else {
+                        responseMsg = "Unable to install User Successfully";
+                    }
+                    break;
 
+                case CLIENT_SLASH_COMMAND:
+                    flockEventService.processTrafficUpdateRequest(payload);
+                    break;
+
+                case CLIENT_PRESS_BUTTON:
+                    flockEventService.handlePressEvent(payload);
                     break;
                 default:
 
             }
-
 
         } catch (ParseException e) {
             logger.error(e.getMessage(), e.getStackTrace());
@@ -105,18 +119,70 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
     @RequestMapping(method = RequestMethod.GET, value = "/hello")
     @ResponseBody
     public ResponseEntity<String> hi(@RequestHeader MultiValueMap<String, String> headers, HttpServletRequest request) {
-        logger.info("Hey There, ATGB");
-        for (String key : headers.keySet()) {
-            logger.info(key + " -- " + headers.get(key));
+        logger.info("Request [{}]", request);
+
+        FlockApiClient flockApiClient = new FlockApiClient(FlockConstants.BOT_TOKEN);
+        Message message = new Message("u:g6ghgghe66h8rzyk", "Hey There!!");
+
+        Attachment attachment = new Attachment();
+        attachment.setForward(true);
+        View view = new View();
+        WidgetView widget = new WidgetView();
+        widget.setHeight(400);
+        widget.setWidth(400);
+        widget.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-claim-banner-old.jpg");
+
+        //view.setWidget(widget);
+        attachment.setViews(view);
+
+        /*Download[] downloads = new Download[2];
+        Download download = new Download();
+        download.setFilename();
+        download.setMime();*/
+
+        Image image1 = new Image();
+        image1.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-claim-banner-old.jpg");
+        image1.setHeight(300);
+        image1.setWidth(300);
+
+        Image image2 = new Image();
+        image1.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-postpaid-300mb.png");
+        image1.setHeight(100);
+        image1.setWidth(100);
+
+        ImageView imageView = new ImageView();
+        imageView.setOriginal(image1);
+        imageView.setThumbnail(image2);
+        imageView.setFilename("Bonanza");
+
+        view.setImage(imageView);
+
+        Attachment[] attachments = new Attachment[1];
+        attachments[0] = attachment;
+
+        message.setAttachments(attachments);
+        try {
+            flockApiClient.chatSendMessage(message);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        logger.info("Request", request);
-        logger.info("Hey There, ATGB");
+
+        /*MapRouteFinder routeFinder = MapRouteFinder.createRouteFinder(28.4547268, 77.0737148, 18.4547268, 57.0737148);
+        try {
+            List<MapRoute> allRoutes = routeFinder.getAllRoutes();
+            MapRoute bestRouteByDistance = routeFinder.getBestRouteByDistance();
+            MapRoute bestRouteByDuration = routeFinder.getBestRouteByDuration();
+            System.out.println();
+        } catch (FlockException e) {
+            e.printStackTrace();
+        }*/
+
         return ResponseEntity.ok("Hey There, ATGB");
     }
 
     @Override
     public boolean authenticate(String flockEventToken) {
-        try {
+        /*try {
             Claims claims = Jwts.parser()
                     .setSigningKey(DatatypeConverter.parseBase64Binary(FlockConstants.APP_SECRET))
                     .parseClaimsJws(flockEventToken).getBody();
@@ -128,7 +194,7 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
         catch(Exception ex){
             logger.error("failed to authenticate flock token", ex);
             return false;
-        }
+        }*/
         return true;
     }
 }

@@ -17,6 +17,7 @@ public enum FlockEvent {
     CLIENT_WIDGET_ACTION("client.widgetAction"),
     CLIENT_FLOCKML_ACTION("client.flockmlAction"),
     CLIENT_OPEN_ATTACHMENT_WIDGET("client.openAttachmentWidget"),
+    CLIENT_SLASH_COMMAND("client.slashCommand"),
     UNKNOWN("unknown");
 
 
@@ -45,4 +46,5 @@ public enum FlockEvent {
         }
         return map.get(name.toLowerCase());
     }
+
 }

@@ -15,7 +15,7 @@ public class FlockConfig {
 
     @Bean(name = "flockDBManager")
     public MongoDBManager mongoPhotoStatsDBManager() {
-        return new MongoDBManager(getMongoDBConfig(FlockConstants.DBNAME));
+        return new MongoDBManager(getMongoDBConfig(FlockConstants.FLOCK_DB));
     }
 
     @Bean
