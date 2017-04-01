@@ -19,7 +19,7 @@ public class MapRouteFinder implements Runnable {
     private String sourceString;
     private String destinationString;
     private int mode = -1;
-    
+
     private volatile boolean hasExceptionOccurred;
     private volatile Exception exception;
     private volatile boolean isThreadCompleted;
@@ -167,6 +167,7 @@ public class MapRouteFinder implements Runnable {
             for (int i = 0; i < directionResults.routes.length; i++) {
                 long duration = 0;
                 long distance = 0;
+                String durationInWords = null;
                 String[] warnings = null;
 
                 DirectionsRoute route = directionResults.routes[i];
@@ -177,11 +178,13 @@ public class MapRouteFinder implements Runnable {
 
                 duration = route.legs[0].duration.inSeconds;
                 distance = route.legs[0].distance.inMeters;
+                durationInWords = route.legs[0].duration.humanReadable;
                 for (int j = 1; j < route.legs.length; j++) {
                     DirectionsLeg leg = route.legs[j];
                     if (duration > leg.duration.inSeconds) {
                         duration = leg.duration.inSeconds;
                         distance = leg.distance.inMeters;
+                        durationInWords = leg.duration.humanReadable;
                     }
                 }
                 MapRoute mapRoute = MapRoute.create();
@@ -196,6 +199,7 @@ public class MapRouteFinder implements Runnable {
                 mapRoute.destinationLng(destinations[0].geometry.location.lng);
                 mapRoute.destinationID(destinations[0].placeId);
                 mapRoute.destinationName(destinations[0].formattedAddress);
+                mapRoute.durationInWords(durationInWords);
                 this.mapRoutes.add(mapRoute);
             }
         } catch (Exception e) {

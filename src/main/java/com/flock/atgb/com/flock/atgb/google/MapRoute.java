@@ -9,6 +9,13 @@ public class MapRoute {
     private long distanceInMeters;
     private long durationInSeconds;
 
+    public String getDurationInWords() {
+        return durationInWords;
+    }
+
+    private String durationInWords;
+
+
     public String getSourceName() {
         return sourceName;
     }
@@ -148,6 +155,11 @@ public class MapRoute {
 
     MapRoute destinationID(final String destinationID) {
         this.destinationID = destinationID;
+        return this;
+    }
+
+    MapRoute durationInWords(final String durationInWords) {
+        this.durationInWords = durationInWords;
         return this;
     }
 }
