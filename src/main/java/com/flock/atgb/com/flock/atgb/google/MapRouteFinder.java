@@ -117,20 +117,14 @@ public class MapRouteFinder implements Runnable {
             if (sources == null) {
                 throw new FlockException("no location present for given source coordinates");
             }
-            if (sources.length > 1) {
-                throw new FlockException("multiple location present for given source coordinates");
-            }
 
             destinations = GeocodingApi.reverseGeocode(MapConfig.mapContext, destinationLocation).await();
             if (destinations == null) {
                 throw new FlockException("no location present for given destination coordinates");
             }
-            if (destinations.length > 1) {
-                throw new FlockException("multiple location present for given destination coordinates");
-            }
 
-            DirectionsResult directionResults = DirectionsApi.getDirections(MapConfig.mapContext, sources[0].formattedAddress,
-                    destinations[0].formattedAddress).await();
+            DirectionsResult directionResults = DirectionsApi.getDirections(MapConfig.mapContext, "place_id:" + sources[0].placeId,
+                    "place_id:" + destinations[0].placeId).await();
             if (directionResults == null || directionResults.routes == null || directionResults.routes.length == 0) {
                 throw new FlockException("no directions available between source and destination");
             }
