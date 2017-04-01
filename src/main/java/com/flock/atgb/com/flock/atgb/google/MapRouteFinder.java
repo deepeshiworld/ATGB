@@ -34,10 +34,6 @@ public class MapRouteFinder implements Runnable {
     }
 
     public MapRoute getBestRouteByDistance() throws FlockException {
-        if (hasExceptionOccurred) {
-            throw new FlockException("failed to find route information", exception);
-        }
-
         synchronized (this) {
             if (!isThreadCompleted) {
                 try {
@@ -46,6 +42,9 @@ public class MapRouteFinder implements Runnable {
                     e.printStackTrace();
                 }
             }
+        }
+        if (hasExceptionOccurred) {
+            throw new FlockException("failed to find route information", exception);
         }
 
         if (mapRoutes.size() == 0) {
@@ -64,10 +63,6 @@ public class MapRouteFinder implements Runnable {
     }
 
     public MapRoute getBestRouteByDuration() throws FlockException {
-        if (hasExceptionOccurred) {
-            throw new FlockException("failed to find route information", exception);
-        }
-
         synchronized (this) {
             if (!isThreadCompleted) {
                 try {
@@ -76,6 +71,9 @@ public class MapRouteFinder implements Runnable {
                     e.printStackTrace();
                 }
             }
+        }
+        if (hasExceptionOccurred) {
+            throw new FlockException("failed to find route information", exception);
         }
 
         if (mapRoutes.size() == 0) {
@@ -94,10 +92,6 @@ public class MapRouteFinder implements Runnable {
     }
 
     public List<MapRoute> getAllRoutes() throws FlockException {
-        if (hasExceptionOccurred) {
-            throw new FlockException("failed to find route information", exception);
-        }
-
         synchronized (this) {
             if (!isThreadCompleted) {
                 try {
@@ -106,6 +100,9 @@ public class MapRouteFinder implements Runnable {
                     e.printStackTrace();
                 }
             }
+        }
+        if (hasExceptionOccurred) {
+            throw new FlockException("failed to find route information", exception);
         }
 
         return mapRoutes;
