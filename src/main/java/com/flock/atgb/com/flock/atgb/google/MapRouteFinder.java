@@ -29,14 +29,8 @@ public class MapRouteFinder implements Runnable {
         new Thread(this).start();
     }
 
-    public static MapRouteFinder createRouteFinder(final LatLng source, final LatLng destination) {
-        if (source == null) {
-            throw new IllegalArgumentException("source coordinates cannot be null");
-        }
-        if (destination == null) {
-            throw new IllegalArgumentException("destination coordinates cannot be null");
-        }
-        return new MapRouteFinder(source, destination);
+    public static MapRouteFinder createRouteFinder(final double sourceLat, final double sourceLang, final double destinationLat, final double destinationLang) {
+        return new MapRouteFinder(new LatLng(sourceLat, sourceLang), new LatLng(destinationLat, destinationLang));
     }
 
     public MapRoute getBestRouteByDistance() throws FlockException {
