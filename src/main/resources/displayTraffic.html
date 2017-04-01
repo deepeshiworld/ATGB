@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Display Traffic</title>
+
+<script async defer
+	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-0d-QNF-Hwx-qnMkE_lg7G5vWzcWwm3A&callback=initializeGoogleMap">
+</script>
+<style>
+#div_google_map{
+	height:400px;
+	width:100%;
+	margin-top:0px;
+}
+
+#div_label_info{
+	margin-bottom:0px;
+	padding:2px;
+	background:rgba(120,160,200,1);
+}
+
+.status{
+    display:block;
+    margin:0px;
+    padding:1px;
+    font-family:tahoma;
+    font-size:14px;
+    height:15px;
+    color:rgba(240,240,240,1);
+}
+</style>
+<script>
+function initializeGoogleMap() {
+    pointA = new google.maps.LatLng(SOURCE_LAT, SOURCE_LNG);
+    pointB = new google.maps.LatLng(DESTINATION_LAT, DESTINATION_LNG);
+    duration = 'DURATION_TRIP';
+    source = 'SOURCE_LOCATION';
+    destination = 'DESTINATION_LOCATION';
+
+    var map_div = document.getElementById("div_google_map");
+    var map_options = {
+        center: pointA,
+        disableDefaultUI: true,
+        rotateControl: false,
+        streetViewControl: false,
+        mapTypeControl: false,
+        zoom: 6,
+    };
+
+    map = new google.maps.Map(map_div, map_options);
+
+    var directionsService = new google.maps.DirectionsService();
+    var directionsDisplay = new google.maps.DirectionsRenderer({
+            map: map
+        });
+
+    directionsService.route({
+        origin: pointA,
+        destination: pointB,
+        travelMode: google.maps.TravelMode.DRIVING
+    }, function (response, status) {
+        if (status == google.maps.DirectionsStatus.OK) {
+            var trafficLayer = new google.maps.TrafficLayer();
+            trafficLayer.setMap(map);
+
+            document.getElementById("div_label_info").innerHTML = "<span class='status'>Duration: " + duration + "</span><span class='status'>Source: " + source + "</span><span class='status'>Destination: " + destination + "</span>";
+            directionsDisplay.setDirections(response);
+        } else {
+            //map.setCenter(midPoint(markerA.position, markerB.position));
+            map.setCenter(pointA);
+            map.setZoom(3);
+            window.alert("No routes available");
+        }
+    });
+}
+</script>
+
+
+</head>
+<body>
+	<div id="div_label_info">
+    </div>
+	<div id="div_google_map" style="height:500px;width:100%"></div>
+</body>
+</html>

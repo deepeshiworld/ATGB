@@ -2,12 +2,12 @@ package com.flock.atgb.handler;
 
 import co.flock.FlockApiClient;
 import co.flock.model.message.Message;
-import co.flock.model.message.attachments.*;
 import com.flock.atgb.com.flock.atgb.google.MapRoute;
 import com.flock.atgb.com.flock.atgb.google.MapRouteFinder;
 import com.flock.atgb.dto.FlockEvent;
 import com.flock.atgb.exception.FlockException;
 import com.flock.atgb.service.FlockEventService;
+import com.flock.atgb.util.CommonUtils;
 import com.flock.atgb.util.FlockConstants;
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
@@ -95,8 +95,14 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
                     break;
 
                 case CLIENT_SLASH_COMMAND:
-                    flockEventService.processTrafficUpdateRequest(payload);
-                    break;
+                    responseStatus = flockEventService.processTrafficUpdateRequest(payload);
+                    if (responseStatus) {
+                        responseMsg = "Traffic Update Set Successfully";
+                    } else {
+                        responseMsg = "Unable to Set Traffic Update ";
+                    }
+                    return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseMsg);
+                //break;
 
                 case CLIENT_PRESS_BUTTON:
                     flockEventService.handlePressEvent(payload);
@@ -124,7 +130,7 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
         FlockApiClient flockApiClient = new FlockApiClient(FlockConstants.BOT_TOKEN);
         Message message = new Message("u:g6ghgghe66h8rzyk", "Hey There!!");
 
-        Attachment attachment = new Attachment();
+        /*Attachment attachment = new Attachment();
         attachment.setForward(true);
         View view = new View();
         WidgetView widget = new WidgetView();
@@ -132,15 +138,15 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
         widget.setWidth(400);
         widget.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-claim-banner-old.jpg");
 
-        //view.setWidget(widget);
-        attachment.setViews(view);
+        view.setWidget(widget);
+        attachment.setViews(view);*/
 
         /*Download[] downloads = new Download[2];
         Download download = new Download();
         download.setFilename();
         download.setMime();*/
 
-        Image image1 = new Image();
+        /*Image image1 = new Image();
         image1.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-claim-banner-old.jpg");
         image1.setHeight(300);
         image1.setWidth(300);
@@ -165,17 +171,26 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
             flockApiClient.chatSendMessage(message);
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
 
-        /*MapRouteFinder routeFinder = MapRouteFinder.createRouteFinder(28.4547268, 77.0737148, 18.4547268, 57.0737148);
+        MapRouteFinder routeFinder = MapRouteFinder.createRouteFinder(28.4547268, 77.0737148, 28.450897, 77.074916);
         try {
             List<MapRoute> allRoutes = routeFinder.getAllRoutes();
             MapRoute bestRouteByDistance = routeFinder.getBestRouteByDistance();
             MapRoute bestRouteByDuration = routeFinder.getBestRouteByDuration();
-            System.out.println();
+
+            String displayHtml = CommonUtils.getDataFromFile("src/main/resources/displayTraffic.html");
+            displayHtml = displayHtml.replace("DURATION_TRIP", bestRouteByDuration.getDurationInWords());
+            displayHtml = displayHtml.replace("SOURCE_LOCATION", bestRouteByDuration.getSourceName());
+            displayHtml = displayHtml.replace("DESTINATION_LOCATION", bestRouteByDuration.getDestinationName());
+            displayHtml = displayHtml.replace("SOURCE_LAT", bestRouteByDuration.getSourceLat() + "");
+            displayHtml = displayHtml.replace("SOURCE_LNG", bestRouteByDuration.getSourceLng() + "");
+            displayHtml = displayHtml.replace("DESTINATION_LAT", bestRouteByDuration.getDestinationLat() + "");
+            displayHtml = displayHtml.replace("DESTINATION_LNG", bestRouteByDuration.getDestinationLng() + "");
+            CommonUtils.sendBotMessage("u:g6ghgghe66h8rzyk", "Hey There!!", displayHtml);
         } catch (FlockException e) {
             e.printStackTrace();
-        }*/
+        }
 
         return ResponseEntity.ok("Hey There, ATGB");
     }

@@ -2,17 +2,26 @@ package com.flock.atgb.util;
 
 import co.flock.FlockApiClient;
 import co.flock.model.message.Message;
-import co.flock.model.message.attachments.*;
+import co.flock.model.message.attachments.Attachment;
+import co.flock.model.message.attachments.HtmlView;
+import co.flock.model.message.attachments.View;
 import com.flock.atgb.com.flock.atgb.google.MapRoute;
 import com.flock.atgb.dto.SlashEvent;
 import com.flock.atgb.dto.TrafficReminderDto;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Created by B0095829 on 4/1/17.
  */
 public class CommonUtils {
 
+    private static final Logger logger = LoggerFactory.getLogger(CommonUtils.class.getCanonicalName());
     private static String pattern = "yyyy-MM-dd HH:mm";
 
     public static void sendNotification(MapRoute bestRouteByDuration, SlashEvent slashEvent, TrafficReminderDto reminderDto) {
@@ -21,35 +30,49 @@ public class CommonUtils {
 
         DateTime nowDate = new DateTime();
         DateTime currEstimateDate = nowDate.plusSeconds(currentTimeTakenSec.intValue());
-        DateTime arrivalDate = new DateTime(reminderDto.getArrivalDate());
+        DateTime finalDestDate = new DateTime(reminderDto.getFinalDestinationDate());
 
+        String inlineHtml = getInlineHtml(bestRouteByDuration);
 
-        if (currEstimateDate.toLocalDate().isBefore(arrivalDate.toLocalDate())) {
+        if (currEstimateDate.getMillis() < finalDestDate.getMillis()) {
             sendBotMessage(slashEvent.getUserId(),
-                    "You Should Leave : Will Reach By : " + currEstimateDate.toString(pattern));
+                    "You Should Leave : Will Reach By : " + currEstimateDate.toString(pattern), inlineHtml);
         } else {
+
+            long diff = (currEstimateDate.getMillis() - finalDestDate.getMillis()) / (1000 * 60);
             sendBotMessage(slashEvent.getUserId(),
-                    "Leave Immediately : Will Reach By : " + currEstimateDate.toString(pattern));
+                    "Leave Immediately : Delayed By : " + diff+
+                            "min Will Reach By : " + currEstimateDate.toString(pattern), inlineHtml);
         }
 
     }
 
-    public static void sendBotMessage(String toUserId, String description) {
+    public static void sendBotMessage(String toUserId, String description, String htmlInline) {
         FlockApiClient flockApiClient = new FlockApiClient(FlockConstants.BOT_TOKEN);
         Message message = new Message(toUserId, description);
 
         Attachment attachment = new Attachment();
         attachment.setForward(true);
         View view = new View();
-        WidgetView widget = new WidgetView();
+
+        /*WidgetView widget = new WidgetView();
         widget.setHeight(400);
         widget.setWidth(400);
         widget.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-claim-banner-old.jpg");
 
-        view.setWidget(widget);
+        view.setWidget(widget);*/
+
+        // HTML
+        HtmlView htmlView = new HtmlView();
+        htmlView.setInline(htmlInline);
+        htmlView.setHeight(400);
+        htmlView.setWidth(600);
+
+        view.setHtml(htmlView);
+
         attachment.setViews(view);
 
-        Image image1 = new Image();
+        /*Image image1 = new Image();
         image1.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-claim-banner-old.jpg");
         image1.setHeight(300);
         image1.setWidth(300);
@@ -64,7 +87,7 @@ public class CommonUtils {
         imageView.setThumbnail(image2);
         imageView.setFilename("Bonanza");
 
-        view.setImage(imageView);
+        view.setImage(imageView);*/
 
         Attachment[] attachments = new Attachment[1];
         attachments[0] = attachment;
@@ -75,5 +98,31 @@ public class CommonUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /* Reads file and return string object */
+    public static String getDataFromFile(String filename) {
+        String content = null;
+        try {
+            Path pwd = Paths.get("").toAbsolutePath();
+            content = new String(Files.readAllBytes(Paths.get(filename)));
+        } catch (Exception e) {
+            logger.error("Error [{}] while reading file [{}]", e.toString(), filename);
+        }
+
+        return content;
+    }
+
+    public static String getInlineHtml(MapRoute bestRouteByDuration) {
+        String displayHtml = CommonUtils.getDataFromFile("src/main/resources/displayTraffic.html");
+        displayHtml = displayHtml.replace("DURATION_TRIP", bestRouteByDuration.getDurationInWords());
+        displayHtml = displayHtml.replace("SOURCE_LOCATION", bestRouteByDuration.getSourceName());
+        displayHtml = displayHtml.replace("DESTINATION_LOCATION", bestRouteByDuration.getDestinationName());
+        displayHtml = displayHtml.replace("SOURCE_LAT", bestRouteByDuration.getSourceLat() + "");
+        displayHtml = displayHtml.replace("SOURCE_LNG", bestRouteByDuration.getSourceLng() + "");
+        displayHtml = displayHtml.replace("DESTINATION_LAT", bestRouteByDuration.getDestinationLat() + "");
+        displayHtml = displayHtml.replace("DESTINATION_LNG", bestRouteByDuration.getDestinationLng() + "");
+
+        return displayHtml;
     }
 }

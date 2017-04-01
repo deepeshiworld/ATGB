@@ -32,7 +32,7 @@ public class TrafficReminderDto {
         this.destination = destination;
     }
 
-    public Date getArrivalDate() {
+    public Date getFinalDestinationDate() {
         return arrivalDate;
     }
 
