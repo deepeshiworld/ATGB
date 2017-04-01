@@ -3,6 +3,8 @@ package com.flock.atgb.handler;
 import com.flock.atgb.dto.FlockEvent;
 import com.flock.atgb.service.FlockEventService;
 import com.flock.atgb.util.FlockConstants;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -18,7 +20,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.DatatypeConverter;
 
 @SpringBootApplication(scanBasePackages = {"com.flock.atgb"})
 @Controller
@@ -111,6 +116,19 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
 
     @Override
     public boolean authenticate(String flockEventToken) {
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(DatatypeConverter.parseBase64Binary(FlockConstants.APP_SECRET))
+                    .parseClaimsJws(flockEventToken).getBody();
+            logger.info("flock token id", claims.getId());
+            logger.info("flock token subject", claims.getSubject());
+            logger.info("flock token issuer", claims.getIssuer());
+            logger.info("flock token expiration", claims.getExpiration());
+        }
+        catch(Exception ex){
+            logger.error("failed to authenticate flock token", ex);
+            return false;
+        }
         return true;
     }
 }
