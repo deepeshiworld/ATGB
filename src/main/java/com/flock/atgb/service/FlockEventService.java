@@ -8,6 +8,7 @@ import com.flock.atgb.dto.TrafficReminderDto;
 import com.flock.atgb.util.CommonUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.mongodb.DBObject;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.json.simple.JSONObject;
@@ -16,9 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by B0095829 on 4/1/17.
@@ -54,7 +53,6 @@ public class FlockEventService {
         try {
             SlashEvent slashEvent = new SlashEvent();
             slashEvent = slashEvent.fromJson(payload);
-            slashEvent.setTaskId(System.currentTimeMillis());
 
             String slashEventText = slashEvent.getText();
             if (StringUtils.isNotBlank(slashEventText)) {
@@ -72,6 +70,10 @@ public class FlockEventService {
                 MapRoute bestRouteByDuration = finder.getBestRouteByDuration();
                 slashEvent.setTimenTakenSec(bestRouteByDuration.getDuration());
                 slashEvent.setActive(true);
+                slashEvent.setAlarmTs(reminderDto.getFinalDestinationDate().getTime());
+                slashEvent.setSourceName(bestRouteByDuration.getSourceName());
+                slashEvent.setDestinationName(bestRouteByDuration.getDestinationName());
+                slashEvent.setFinalTimeToReach(reminderDto.getFinalDestinationDate().toString());
 
                 // Save to DB
                 flockDbService.addTrafficDataInDB(slashEvent);
@@ -127,8 +129,7 @@ public class FlockEventService {
             flockUser.setActive(false);
 
             Map<String, Object> params = new HashMap<String, Object>();
-            params.put("userId", flockUser.getUserId());
-            params.put("isActive", flockUser.isActive());
+            params.put("isActive", false);
             return flockDbService.updateUserInDb(flockUser, params, false);
         } catch (JsonSyntaxException e) {
             e.printStackTrace();
@@ -137,5 +138,20 @@ public class FlockEventService {
     }
 
     public void handlePressEvent(String payload) {
+    }
+
+    public List<SlashEvent> getUpcomingTrafficUpdates(String userId) {
+
+        List<SlashEvent> events = new ArrayList<>();
+
+        List<DBObject> slashObjects = flockDbService.getSlashObjectByUserIdTs(userId, System.currentTimeMillis());
+        for (DBObject slashDbObj : slashObjects) {
+            SlashEvent event = new SlashEvent();
+            JSONObject jsonObject = new JSONObject(slashDbObj.toMap());
+            event = event.fromJson(jsonObject.toJSONString());
+            events.add(event);
+        }
+
+        return events;
     }
 }

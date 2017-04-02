@@ -16,5 +16,7 @@ public class FlockConstants {
     // Database constants
     public static final String FLOCK_DB         = "flockDb";
     public static final String USER             = "user";
-    public static final String TRAFFIC          = "trafficUpdate";
+    public static final String TRAFFIC_DB       = "trafficUpdate";
+
+    public  static  final String html="<!doctype html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Airtel</title><link href=\"css/style.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"js/jquery.min.js\"></script></head>";
 }

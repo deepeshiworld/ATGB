@@ -7,13 +7,13 @@ import com.flock.atgb.util.FlockConstants;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.apache.commons.lang.StringUtils;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -114,16 +114,44 @@ public class FlockDbService {
 
             if (slashEvent != null) {
 
-                mongoDBManager.addObject(FlockConstants.TRAFFIC, slashEvent.toJson());
+                mongoDBManager.addObject(FlockConstants.TRAFFIC_DB, slashEvent.toJson());
             }
         } catch (Exception e) {
-            logger.error("Error creating MyAirtelAppUserPreferences for : " + slashEvent.getUserId() + ". Error : " + e.getMessage(), e);
+            logger.error("Error creating UserPreferences for : " + slashEvent.getUserId() + ". Error : " + e.getMessage(), e);
             return false;
         }
         return true;
     }
 
-    public SlashEvent getTrafficEventFromTaskId(String taskId) {
+    public boolean updateTrafficDataInDb(SlashEvent SlashEvent, Map<String, Object> paramsMap, boolean upsert) {
+
+        if (SlashEvent == null) {
+            return false;
+        }
+
+        try {
+
+            if (SlashEvent != null) {
+                Map<String, Object> queryParams = new HashMap<String, Object>();
+                queryParams.put("userId", SlashEvent.getUserId());
+                queryParams.put("alarmTs", SlashEvent.getAlarmTs());
+
+                BasicDBObject dbObj = new BasicDBObject();
+                dbObj.putAll(paramsMap);
+
+                Map<String, Object> uParams = new HashMap<String, Object>();
+                uParams.put("$set", dbObj);
+
+                mongoDBManager.updateObject(FlockConstants.TRAFFIC_DB, queryParams, uParams, upsert, false);
+            }
+        } catch (Exception e) {
+            logger.error("Error creating MyAirtelAppUserPreferences for : " + SlashEvent.getUserId() + ". Error : " + e.getMessage(), e);
+            return false;
+        }
+        return true;
+    }
+
+    public SlashEvent getTrafficEventFromTaskId(String taskId, long ts) {
 
         String userJsonString = null;
         SlashEvent slashEvent = null;
@@ -150,8 +178,27 @@ public class FlockDbService {
             }
             Map queryParams = new HashMap<>();
             queryParams.put("taskId", taskId);
-            dbObject = mongoDBManager.getObject(FlockConstants.TRAFFIC, queryParams);
+            queryParams.put("isActive", true);
+
+            dbObject = mongoDBManager.getObject(FlockConstants.TRAFFIC_DB, queryParams);
         }
         return dbObject;
+    }
+
+    protected List<DBObject> getSlashObjectByUserIdTs(String taskId, long ts) {
+
+        List<DBObject> dbObjectList = null;
+        if (mongoDBManager != null) {
+            if (StringUtils.isBlank(taskId)) {
+                return null;
+            }
+            Map queryParams = new HashMap<>();
+            queryParams.put("userId", taskId);
+            //queryParams.put("isActive", true);
+            queryParams.put("alarmTs", new BasicDBObject("$gte", ts));
+
+            dbObjectList = mongoDBManager.getObjects(FlockConstants.TRAFFIC_DB, queryParams);
+        }
+        return dbObjectList;
     }
 }

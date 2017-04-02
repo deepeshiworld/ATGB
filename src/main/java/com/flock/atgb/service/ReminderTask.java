@@ -42,23 +42,25 @@ public class ReminderTask extends TimerTask {
 
 
         try {
-            long timenTakenSecOriginal = slashEvent.getTimenTakenSec();
+            long timeTakenSecOriginal = slashEvent.getTimenTakenSec();
 
             // Find Current Best Route
             MapRouteFinder finder = MapRouteFinder.createRouteFinder(reminderDto.getSource(), reminderDto.getDestination());
             MapRoute bestRouteByDuration = finder.getBestRouteByDuration();
 
-            long diff = bestRouteByDuration.getDuration() - timenTakenSecOriginal;
+            long diff = bestRouteByDuration.getDuration() - timeTakenSecOriginal;
 
             // currTimeTaken > previous (Route Busy) - 5min window
             if (diff > 5 * 60) {
                 // Send Notification with expected reaching time
                 CommonUtils.sendNotification(bestRouteByDuration, slashEvent, reminderDto);
 
-                // Update Db Status to inactive
+                // No need to Update DB Status as we are query using TS
+
             } else {
                 if (count >= 2) {
                     logger.info("Limit to Set Timer Exhaust for UserId [{}] userName [{}] ", slashEvent.getUserId(), slashEvent.getUserName());
+
                     // Send Notification with expected reaching time
                     CommonUtils.sendNotification(bestRouteByDuration, slashEvent, reminderDto);
                     return;

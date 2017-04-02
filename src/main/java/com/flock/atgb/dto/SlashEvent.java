@@ -12,7 +12,7 @@ public class SlashEvent {
 
     private static Gson gson = new Gson();
 
-    private long taskId;
+    private long alarmTs;
     private String chat;
     private String name;
     private String chatName;
@@ -23,6 +23,9 @@ public class SlashEvent {
     private String command;
     private boolean isActive;
     private long timenTakenSec;
+    private String sourceName;
+    private String destinationName;
+    private String finalTimeToReach;
 
     public String getChat() {
         return chat;
@@ -104,12 +107,36 @@ public class SlashEvent {
         this.timenTakenSec = timenTakenSec;
     }
 
-    public long getTaskId() {
-        return taskId;
+    public String getSourceName() {
+        return sourceName;
     }
 
-    public void setTaskId(long taskId) {
-        this.taskId = taskId;
+    public void setSourceName(String sourceName) {
+        this.sourceName = sourceName;
+    }
+
+    public String getDestinationName() {
+        return destinationName;
+    }
+
+    public void setDestinationName(String destinationName) {
+        this.destinationName = destinationName;
+    }
+
+    public long getAlarmTs() {
+        return alarmTs;
+    }
+
+    public void setAlarmTs(long alarmTs) {
+        this.alarmTs = alarmTs;
+    }
+
+    public String getFinalTimeToReach() {
+        return finalTimeToReach;
+    }
+
+    public void setFinalTimeToReach(String finalTimeToReach) {
+        this.finalTimeToReach = finalTimeToReach;
     }
 
     public SlashEvent fromJson(String userJsonString) {

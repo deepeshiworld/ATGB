@@ -8,6 +8,7 @@ import co.flock.model.message.attachments.View;
 import com.flock.atgb.com.flock.atgb.google.MapRoute;
 import com.flock.atgb.dto.SlashEvent;
 import com.flock.atgb.dto.TrafficReminderDto;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by B0095829 on 4/1/17.
@@ -34,15 +37,19 @@ public class CommonUtils {
 
         String inlineHtml = getInlineHtml(bestRouteByDuration);
 
-        if (currEstimateDate.getMillis() < finalDestDate.getMillis()) {
+        if (currEstimateDate.getMillis() <= finalDestDate.getMillis()) {
             sendBotMessage(slashEvent.getUserId(),
                     "You Should Leave : Will Reach By : " + currEstimateDate.toString(pattern), inlineHtml);
         } else {
 
             long diff = (currEstimateDate.getMillis() - finalDestDate.getMillis()) / (1000 * 60);
-            sendBotMessage(slashEvent.getUserId(),
-                    "Leave Immediately : Delayed By : " + diff+
-                            "min Will Reach By : " + currEstimateDate.toString(pattern), inlineHtml);
+            String description = StringUtils.EMPTY;
+            if (diff > 5) {
+                description = "Leave Immediately : Delayed By : " + diff + "min Will Reach By : " + currEstimateDate.toString(pattern);
+            } else {
+                description = "Leave Immediately , Will Reach By : " + currEstimateDate.toString(pattern);
+            }
+            sendBotMessage(slashEvent.getUserId(), description, inlineHtml);
         }
 
     }
@@ -124,5 +131,34 @@ public class CommonUtils {
         displayHtml = displayHtml.replace("DESTINATION_LNG", bestRouteByDuration.getDestinationLng() + "");
 
         return displayHtml;
+    }
+
+
+    public static String getInlineHtml(String uid ) {
+        String displayHtml = CommonUtils.getDataFromFile("src/main/resources/locationSelector.html");
+        displayHtml = displayHtml.replace("USER_ID", uid);
+
+        return displayHtml;
+    }
+
+    public static String getUpdateListHtml(List<SlashEvent> upcomingTrafficUpdates) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("<!doctype html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Traffic Update</title><link href=\"src/main/resources/css/style.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"src/main/resources/js/jquery.min.js\"></script></head><body><section class=\"body-block\"><div class=\"top-header\">");
+        builder.append("<p class=\"header\">" + upcomingTrafficUpdates.get(0).getUserName() + ":Upcoming Traffic Update Events</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
+
+
+        for (SlashEvent slashEvent : upcomingTrafficUpdates) {
+
+            long minutes = (slashEvent.getTimenTakenSec() % 3600) / 60;
+            String reachTime = minutes + "";
+            /*TrafficReminderDto reminderDto = new TrafficReminderDto();
+            reminderDto.parse(slashEvent.getText());
+            Date finalTimeToReach = reminderDto.getFinalDestinationDate();*/
+            String finalTimeToReach = slashEvent.getFinalTimeToReach();
+            builder.append("<article class=\"data-block\"><div class=\"inner-header\"><div class=\"refer red\"><span class=\"icon\"><img src=\"src/main/resources/image/traffic.png\" width=\"25\" alt=\"refer\"></span><p>" + slashEvent.getSourceName() + "->" + slashEvent.getDestinationName() + "</p></div><div class=\"data\"><span class=\"mb\"><a href=\"#\">" + reachTime + "</a></span></div></div><div class=\"content\">Time to Reach:" + finalTimeToReach + "</div></article>");
+        }
+        builder.append("</section></div></body></html>");
+
+        return builder.toString();
     }
 }

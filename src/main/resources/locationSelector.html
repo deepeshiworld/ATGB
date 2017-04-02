@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Location Selector</title>
+<script async defer
+	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-0d-QNF-Hwx-qnMkE_lg7G5vWzcWwm3A&callback=initializeGoogleMap">
+</script>
+<style>
+#div_google_map_source, #div_google_map_destination{
+	height:300px;
+	width:100%;
+	margin-top:0px;
+}
+
+#div_source, #div_destination, #div_date_picker{
+	cursor: pointer; cursor: hand;
+	margin-bottom:0px;
+	margin-top:4px;
+	font-family:tahoma;
+	font-size:14px;
+	height:20px;
+	color:rgba(240,240,240,1);
+	padding:4px;
+	background:rgba(120,160,200,1);
+}
+</style>
+<script>
+var sourceCoodinates;
+var destinationCoordinates;
+var currentLocation = {
+    lat: 28.634547,
+    lng: 77.21309528
+};
+function initializeGoogleMap() {
+
+    var currentLocationSupported = false;
+    var currentLocationAllowed = false;
+
+    var map_div_source = document.getElementById("div_google_map_source");
+    var map_div_destination = document.getElementById("div_google_map_destination");
+    var map_options = {
+        center: currentLocation,
+        disableDefaultUI: false,
+        rotateControl: false,
+        streetViewControl: false,
+        mapTypeControl: false,
+        zoom: 9,
+    };
+    var map_options1 = {
+        center: currentLocation,
+        disableDefaultUI: false,
+        rotateControl: false,
+        streetViewControl: false,
+        mapTypeControl: false,
+        zoom: 9,
+    };
+
+    map_source = new google.maps.Map(map_div_source, map_options);
+    map_destination = new google.maps.Map(map_div_destination, map_options1);
+
+    var marker_source = new google.maps.Marker({
+            title: 'Source Location',
+            position: map_source.center,
+        });
+    var marker_destination = new google.maps.Marker({
+            title: 'Destination Location',
+            position: map_destination.center,
+        });
+    if (navigator.geolocation) {
+        currentLocationSupported = true;
+        navigator.geolocation.getCurrentPosition(function (position) {
+            currentLocationSupported = true;
+            currentLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            map_source.setCenter(currentLocation);
+            marker_source.setPosition(currentLocation);
+            sourceCoodinates = currentLocation;
+            map_destination.setCenter(currentLocation);
+            marker_destination.setPosition(currentLocation);
+            destinationCoordinates = currentLocation;
+        }, function () {
+            console.log("user didn't allow current location.")
+            map_source.setCenter(currentLocation);
+            marker_source.setPosition(currentLocation);
+            sourceCoodinates = currentLocation;
+            map_destination.setCenter(currentLocation);
+            marker_destination.setPosition(currentLocation);
+            destinationCoordinates = currentLocation;
+        });
+    } else {
+        console.log("browser does not supported current location.")
+    }
+
+    var lastevent_src = "idle";
+    var lastevent_dest = "idle";
+    map_source.addListener('drag', function (e) {
+        marker_source.setPosition(map_source.center);
+        sourceCoodinates = marker_source.position;
+    });
+    map_source.addListener('idle', function (e) {
+        lastevent_src = "idle";
+    });
+
+    map_source.addListener('dragend', function (e) {
+        marker_source.setPosition(map_source.center);
+        sourceCoodinates = marker_source.position;
+        lastevent_src = "dragend";
+    });
+
+    map_source.addListener('mousemove', function (e) {
+        if (lastevent_src === "dragend") {
+            marker_source.setPosition(map_source.center);
+            sourceCoodinates = marker_source.position;
+        }
+    });
+
+    map_source.addListener('zoom_changed', function (e) {
+        map_source.setCenter(marker_source.position);
+    });
+
+    marker_source.setMap(map_source);
+    sourceCoodinates = marker_source.position;
+
+    map_destination.addListener('drag', function (e) {
+        marker_destination.setPosition(map_destination.center);
+        destinationCoordinates = marker_destination.position;
+    });
+    map_destination.addListener('idle', function (e) {
+        lastevent_dest = "idle";
+    });
+
+    map_destination.addListener('dragend', function (e) {
+        marker_destination.setPosition(map_destination.center);
+        destinationCoordinates = marker_destination.position;
+        lastevent_dest = "dragend";
+    });
+
+    map_destination.addListener('zoom_changed', function (e) {
+        map_destination.setCenter(marker_destination.position);
+    });
+
+    map_destination.addListener('mousemove', function (e) {
+        if (lastevent_dest === "dragend") {
+            marker_destination.setPosition(map_destination.center);
+            destinationCoordinates = marker_destination.position;
+        }
+    });
+
+    marker_destination.setMap(map_destination);
+    destinationCoordinates = marker_destination.position;
+}
+
+function clickHandler(control) {
+    if (control.id === "div_source") {
+        if (document.getElementById("div_google_map_source").style.display === "none") {
+            document.getElementById("div_google_map_source").style.display = "block";
+        } else {
+            document.getElementById("div_google_map_source").style.display = "none"
+        }
+    } else if (control.id === "div_destination") {
+        if (document.getElementById("div_google_map_destination").style.display === "none") {
+            document.getElementById("div_google_map_destination").style.display = "block";
+        } else {
+            document.getElementById("div_google_map_destination").style.display = "none"
+        }
+    }
+}
+
+function saveDetails() {
+    var http = new XMLHttpRequest();
+    var url = "http://603cf4f2.ngrok.io/addTrafficUpdate";
+    var params = "{source_lat:" + sourceCoodinates.lat
+		+ ",source_lng:" + sourceCoodinates.lng
+		+ ",destination_lat:" + destinationCoordinates.lat
+		+ ",destination_lng:" + destinationCoordinates.lng
+        + ",user_id:" + document.getElementById("uid").value
+        + ",date_time:" + document.getElementById("date_picker").value + "}";
+    http.open("POST", url, true);
+
+    //Send the proper header information along with the request
+    http.setRequestHeader("Content-type", "application/json");
+
+    http.onreadystatechange = function () { //Call a function when the state changes.
+        if (http.readyState == 4) {
+            if (http.status == 200) {
+                alert("alarm saved successfully");
+            } else {
+                alert("failed to set alarm. code:" + http.status + ", msg=" + http.responseText);
+            }
+        }
+    }
+    http.send(params);
+}
+</script>
+</head>
+<body>
+<div id="source">
+	<input id="uid" type="hidden" value="USER_ID" />
+	<div id="div_source" onclick="clickHandler(this)">Choose Source Location</div>
+	<div id="div_google_map_source"></div>
+	</div>
+	<div id="destination">
+	<div id="div_destination" onclick="clickHandler(this)">Choose Destination Location</div>
+	<div id="div_google_map_destination"></div>
+	</div>
+	<div id="div_date_picker">
+		Reach destination by: <Input id="date_picker" type="datetime-local" /> <Button id="save_alarm" onclick="saveDetails()">Save Location Alarm</button>
+	</div>
+</body>
+</html>

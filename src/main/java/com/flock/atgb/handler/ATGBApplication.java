@@ -5,6 +5,7 @@ import co.flock.model.message.Message;
 import com.flock.atgb.com.flock.atgb.google.MapRoute;
 import com.flock.atgb.com.flock.atgb.google.MapRouteFinder;
 import com.flock.atgb.dto.FlockEvent;
+import com.flock.atgb.dto.SlashEvent;
 import com.flock.atgb.exception.FlockException;
 import com.flock.atgb.service.FlockEventService;
 import com.flock.atgb.util.CommonUtils;
@@ -19,14 +20,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Map;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @SpringBootApplication(scanBasePackages = {"com.flock.atgb"})
 @Controller
 public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
@@ -120,6 +125,70 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
             return ResponseEntity.status(HttpStatus.OK).body(responseMsg);
         }
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(responseMsg);
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "/addTrafficUpdate")
+    @ResponseBody
+    public ResponseEntity<Object> addTrafficUpdate(@RequestBody String payload, HttpServletResponse response) {
+        logger.info("Flock Event Received [{}] ", payload);
+        return ResponseEntity.status(HttpStatus.OK).body("HI");
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getUpdateList")
+    public ResponseEntity<String> getSlashEvents(HttpServletRequest request) {
+        String queryString = request.getQueryString();
+        Map<String, String[]> parameterMap = request.getParameterMap();
+
+        String[] flockEventJson;
+        JSONObject flockEventObject = null;
+        for (String key : parameterMap.keySet()) {
+
+            if (key.equals("flockEvent")) {
+                flockEventJson = parameterMap.get(key);
+                String jObj = flockEventJson[0];
+                JSONParser parser = new JSONParser();
+                try {
+                    flockEventObject = (JSONObject) parser.parse(jObj);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
+        }
+        logger.info(flockEventObject.toJSONString());
+        String userId = (String) flockEventObject.get("userId");
+        List<SlashEvent> upcomingTrafficUpdates = flockEventService.getUpcomingTrafficUpdates(userId);
+        String updateListHtml = CommonUtils.getUpdateListHtml(upcomingTrafficUpdates);
+        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.TEXT_HTML).body(updateListHtml);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getLocationSelector")
+    public ResponseEntity<String> getLocationSelector(HttpServletRequest request) {
+        String queryString = request.getQueryString();
+        Map<String, String[]> parameterMap = request.getParameterMap();
+
+        String[] flockEventJson;
+        JSONObject flockEventObject = null;
+        for (String key : parameterMap.keySet()) {
+
+            if (key.equals("flockEvent")) {
+                flockEventJson = parameterMap.get(key);
+                String jObj = flockEventJson[0];
+                JSONParser parser = new JSONParser();
+                try {
+                    flockEventObject = (JSONObject) parser.parse(jObj);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
+        }
+        logger.info(flockEventObject.toJSONString());
+        String userId = (String) flockEventObject.get("userId");
+
+        String html = CommonUtils.getInlineHtml(userId);
+
+        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.TEXT_HTML).body(html);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/hello")
