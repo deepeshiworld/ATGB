@@ -30,11 +30,9 @@
     <script>
         var sourceCoodinates;
         var destinationCoordinates;
-        var currentLocation = {
-            lat: 28.634547,
-            lng: 77.21309528
-        };
         function initializeGoogleMap() {
+            currentLocation_src = new google.maps.LatLng(28.634547, 77.21309528);
+            currentLocation_dest = new google.maps.LatLng(28.634547, 77.21309528);
 
             var currentLocationSupported = false;
             var currentLocationAllowed = false;
@@ -42,7 +40,7 @@
             var map_div_source = document.getElementById("div_google_map_source");
             var map_div_destination = document.getElementById("div_google_map_destination");
             var map_options = {
-                center: currentLocation,
+                center: currentLocation_src,
                 disableDefaultUI: false,
                 rotateControl: false,
                 streetViewControl: false,
@@ -50,7 +48,7 @@
                 zoom: 9,
             };
             var map_options1 = {
-                center: currentLocation,
+                center: currentLocation_dest,
                 disableDefaultUI: false,
                 rotateControl: false,
                 streetViewControl: false,
@@ -73,24 +71,30 @@
                 currentLocationSupported = true;
                 navigator.geolocation.getCurrentPosition(function (position) {
                     currentLocationSupported = true;
-                    currentLocation = {
+                    currentLocation_src = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
                     };
-                    map_source.setCenter(currentLocation);
-                    marker_source.setPosition(currentLocation);
-                    sourceCoodinates = currentLocation;
-                    map_destination.setCenter(currentLocation);
-                    marker_destination.setPosition(currentLocation);
-                    destinationCoordinates = currentLocation;
+
+                    currentLocation_dest = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    map_source.setCenter(currentLocation_src);
+                    marker_source.setPosition(currentLocation_src);
+                    sourceCoodinates = currentLocation_src;
+                    map_destination.setCenter(currentLocation_dest);
+                    marker_destination.setPosition(currentLocation_dest);
+                    destinationCoordinates = currentLocation_dest;
                 }, function () {
                     console.log("user didn't allow current location.")
-                    map_source.setCenter(currentLocation);
-                    marker_source.setPosition(currentLocation);
-                    sourceCoodinates = currentLocation;
-                    map_destination.setCenter(currentLocation);
-                    marker_destination.setPosition(currentLocation);
-                    destinationCoordinates = currentLocation;
+                    map_source.setCenter(currentLocation_src);
+                    marker_source.setPosition(currentLocation_src);
+                    sourceCoodinates = currentLocation_src;
+                    map_destination.setCenter(currentLocation_dest);
+                    marker_destination.setPosition(currentLocation_dest);
+                    destinationCoordinates = currentLocation_dest;
                 });
             } else {
                 console.log("browser does not supported current location.")
@@ -173,18 +177,18 @@
 
         function saveDetails() {
             var url = "https://603cf4f2.ngrok.io/addTrafficUpdate";
-            var params = "{sourceLat:" + sourceCoodinates.lat
-                + ",sourceLng:" + sourceCoodinates.lng
-                + ",destinationLat:" + destinationCoordinates.lat
-                + ",destinationLng:" + destinationCoordinates.lng
+            var params = "{sourceLat:" + sourceCoodinates.lat()
+                + ",sourceLng:" + sourceCoodinates.lng()
+                + ",destinationLat:" + destinationCoordinates.lat()
+                + ",destinationLng:" + destinationCoordinates.lng()
                 + ",userId:" + document.getElementById("uid").value
                 + ",final1TimeToReach:" + document.getElementById("date_picker").value + "}";
 
             //Payload
-            var sourceLng = sourceCoodinates.lng;
-            var sourceLat = sourceCoodinates.lat;
-            var destinationLat = destinationCoordinates.lat;
-            var destinationLng = destinationCoordinates.lng;
+            var sourceLng = sourceCoodinates.lng();
+            var sourceLat = sourceCoodinates.lat();
+            var destinationLat = destinationCoordinates.lat();
+            var destinationLng = destinationCoordinates.lng();
             var userId = document.getElementById("uid").value;
             var finalTimeToReach = document.getElementById("date_picker").value;
 
