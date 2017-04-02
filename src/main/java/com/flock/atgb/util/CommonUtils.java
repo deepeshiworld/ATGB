@@ -145,10 +145,14 @@ public class CommonUtils {
     }
 
     public static String getUpdateListHtml(List<SlashEvent> upcomingTrafficUpdates) {
-        if(upcomingTrafficUpdates.size() != 0) {
+        if (upcomingTrafficUpdates.size() != 0) {
             StringBuilder builder = new StringBuilder();
+            String name = "Bot";
+            if (upcomingTrafficUpdates.get(0) != null && StringUtils.isNotBlank(upcomingTrafficUpdates.get(0).getUserName())) {
+                name = upcomingTrafficUpdates.get(0).getUserName();
+            }
             builder.append("<!doctype html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Traffic Update</title><link href=\"https://api.myairtelapp.bsbportal.in/web/css/jackpot.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"https://api.myairtelapp.bsbportal.in/web/js/jquery.min.js\"></script></head><body><section class=\"body-block\"><div class=\"top-header\">");
-            builder.append("<p class=\"header\">" + upcomingTrafficUpdates.get(0).getUserName() + " : Upcoming Traffic Update Events</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
+            builder.append("<p class=\"header\">" + name + " : Upcoming Traffic Update Events</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
 
 
             for (SlashEvent slashEvent : upcomingTrafficUpdates) {
@@ -164,7 +168,7 @@ public class CommonUtils {
             builder.append("</section></div></body></html>");
 
             return builder.toString();
-        }else{
+        } else {
             StringBuilder builder = new StringBuilder();
             builder.append("<!doctype html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Traffic Update</title><link href=\"https://api.myairtelapp.bsbportal.in/web/css/jackpot.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"https://api.myairtelapp.bsbportal.in/web/js/jquery.min.js\"></script></head><body><section class=\"body-block\"><div class=\"top-header\">");
             builder.append("<p class=\"header\"> No Updates Available</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
