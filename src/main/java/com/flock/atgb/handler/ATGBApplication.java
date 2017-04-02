@@ -127,9 +127,14 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(responseMsg);
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "/addTrafficUpdate")
+
+    @RequestMapping(method = {RequestMethod.POST,RequestMethod.OPTIONS}, value = "/addTrafficUpdate")
     @ResponseBody
-    public ResponseEntity<Object> addTrafficUpdate(@RequestBody String payload, HttpServletResponse response) {
+    public ResponseEntity<Object> addTrafficUpdate(@RequestBody String payload, HttpServletRequest request,HttpServletResponse response) {
+        if(request.getMethod().equals(RequestMethod.OPTIONS)){
+            return ResponseEntity.status(HttpStatus.OK).body("");
+        }
+
         logger.info("Flock Event Received [{}] ", payload);
         return ResponseEntity.status(HttpStatus.OK).body("HI");
     }
@@ -198,49 +203,6 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
 
         FlockApiClient flockApiClient = new FlockApiClient(FlockConstants.BOT_TOKEN);
         Message message = new Message("u:g6ghgghe66h8rzyk", "Hey There!!");
-
-        /*Attachment attachment = new Attachment();
-        attachment.setForward(true);
-        View view = new View();
-        WidgetView widget = new WidgetView();
-        widget.setHeight(400);
-        widget.setWidth(400);
-        widget.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-claim-banner-old.jpg");
-
-        view.setWidget(widget);
-        attachment.setViews(view);*/
-
-        /*Download[] downloads = new Download[2];
-        Download download = new Download();
-        download.setFilename();
-        download.setMime();*/
-
-        /*Image image1 = new Image();
-        image1.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-claim-banner-old.jpg");
-        image1.setHeight(300);
-        image1.setWidth(300);
-
-        Image image2 = new Image();
-        image1.setSrc("https://api.myairtelapp.bsbportal.in/web/images/bonanza-postpaid-300mb.png");
-        image1.setHeight(100);
-        image1.setWidth(100);
-
-        ImageView imageView = new ImageView();
-        imageView.setOriginal(image1);
-        imageView.setThumbnail(image2);
-        imageView.setFilename("Bonanza");
-
-        view.setImage(imageView);
-
-        Attachment[] attachments = new Attachment[1];
-        attachments[0] = attachment;
-
-        message.setAttachments(attachments);
-        try {
-            flockApiClient.chatSendMessage(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
 
         MapRouteFinder routeFinder = MapRouteFinder.createRouteFinder(28.4547268, 77.0737148, 28.450897, 77.074916);
         try {

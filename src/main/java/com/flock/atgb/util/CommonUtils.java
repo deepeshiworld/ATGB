@@ -143,8 +143,8 @@ public class CommonUtils {
 
     public static String getUpdateListHtml(List<SlashEvent> upcomingTrafficUpdates) {
         StringBuilder builder = new StringBuilder();
-        builder.append("<!doctype html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Traffic Update</title><link href=\"src/main/resources/css/style.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"src/main/resources/js/jquery.min.js\"></script></head><body><section class=\"body-block\"><div class=\"top-header\">");
-        builder.append("<p class=\"header\">" + upcomingTrafficUpdates.get(0).getUserName() + ":Upcoming Traffic Update Events</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
+        builder.append("<!doctype html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Traffic Update</title><link href=\"https://api.myairtelapp.bsbportal.in/web/css/jackpot.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"https://api.myairtelapp.bsbportal.in/web/js/jquery.min.js\"></script></head><body><section class=\"body-block\"><div class=\"top-header\">");
+        builder.append("<p class=\"header\">" + upcomingTrafficUpdates.get(0).getUserName() + " : Upcoming Traffic Update Events</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
 
 
         for (SlashEvent slashEvent : upcomingTrafficUpdates) {
@@ -155,7 +155,7 @@ public class CommonUtils {
             reminderDto.parse(slashEvent.getText());
             Date finalTimeToReach = reminderDto.getFinalDestinationDate();*/
             String finalTimeToReach = slashEvent.getFinalTimeToReach();
-            builder.append("<article class=\"data-block\"><div class=\"inner-header\"><div class=\"refer red\"><span class=\"icon\"><img src=\"src/main/resources/image/traffic.png\" width=\"25\" alt=\"refer\"></span><p>" + slashEvent.getSourceName() + "->" + slashEvent.getDestinationName() + "</p></div><div class=\"data\"><span class=\"mb\"><a href=\"#\">" + reachTime + "</a></span></div></div><div class=\"content\">Time to Reach:" + finalTimeToReach + "</div></article>");
+            builder.append("<article class=\"data-block\"><div class=\"inner-header\"><div class=\"refer red\"><span class=\"icon\"><img src=\"https://cdn0.iconfinder.com/data/icons/geo-points/154/time-512.png\" width=\"25\" alt=\"refer\"></span><p>" + slashEvent.getSourceName() + "->" + slashEvent.getDestinationName() + "</p></div><div class=\"data\"><span class=\"mb\"><a href=\"#\">" + reachTime + "</a></span></div></div><div class=\"content\">Time to Reach:" + finalTimeToReach + "</div></article>");
         }
         builder.append("</section></div></body></html>");
 
