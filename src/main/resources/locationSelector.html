@@ -28,6 +28,11 @@
         }
     </style>
     <script>
+        function isFunction(functionToCheck) {
+            var getType = {};
+            return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+        }
+
         var sourceCoodinates;
         var destinationCoordinates;
         function initializeGoogleMap() {
@@ -185,10 +190,10 @@
                 + ",final1TimeToReach:" + document.getElementById("date_picker").value + "}";
 
             //Payload
-            var sourceLng = sourceCoodinates.lng();
-            var sourceLat = sourceCoodinates.lat();
-            var destinationLat = destinationCoordinates.lat();
-            var destinationLng = destinationCoordinates.lng();
+            var sourceLng = isFunction(sourceCoodinates.lng)?sourceCoodinates.lng():sourceCoodinates.lng;
+            var sourceLat = isFunction(sourceCoodinates.lat)?sourceCoodinates.lat():sourceCoodinates.lat;
+            var destinationLat = isFunction(destinationCoordinates.lat)?destinationCoordinates.lat():destinationCoordinates.lat;
+            var destinationLng = isFunction(destinationCoordinates.lng)?destinationCoordinates.lng():destinationCoordinates.lng;
             var userId = document.getElementById("uid").value;
             var finalTimeToReach = document.getElementById("date_picker").value;
 
