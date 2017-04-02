@@ -182,12 +182,6 @@
 
         function saveDetails() {
             var url = "https://603cf4f2.ngrok.io/addTrafficUpdate";
-            var params = "{sourceLat:" + sourceCoodinates.lat()
-                + ",sourceLng:" + sourceCoodinates.lng()
-                + ",destinationLat:" + destinationCoordinates.lat()
-                + ",destinationLng:" + destinationCoordinates.lng()
-                + ",userId:" + document.getElementById("uid").value
-                + ",final1TimeToReach:" + document.getElementById("date_picker").value + "}";
 
             //Payload
             var sourceLng = isFunction(sourceCoodinates.lng)?sourceCoodinates.lng():sourceCoodinates.lng;
