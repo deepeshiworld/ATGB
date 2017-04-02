@@ -60,7 +60,7 @@ function initializeGoogleMap() {
         destination: pointB,
         travelMode: google.maps.TravelMode.DRIVING
     }, function (response, status) {
-        if (status == google.maps.DirectionsStatus.OK) {
+        if (status === 'OK') {
             var trafficLayer = new google.maps.TrafficLayer();
             trafficLayer.setMap(map);
 

@@ -100,14 +100,15 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
                     break;
 
                 case CLIENT_SLASH_COMMAND:
-                    responseStatus = flockEventService.processTrafficUpdateRequest(payload);
+                    responseStatus = flockEventService.processTrafficUpdateRequest(payload, false);
                     if (responseStatus) {
                         responseMsg = "Traffic Update Set Successfully";
                     } else {
                         responseMsg = "Unable to Set Traffic Update ";
+                        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseMsg);
                     }
-                    return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseMsg);
-                //break;
+
+                    //break;
 
                 case CLIENT_PRESS_BUTTON:
                     flockEventService.handlePressEvent(payload);
@@ -128,15 +129,24 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
     }
 
 
-    @RequestMapping(method = {RequestMethod.POST,RequestMethod.OPTIONS}, value = "/addTrafficUpdate")
+    @RequestMapping(method = {RequestMethod.POST, RequestMethod.OPTIONS}, value = "/addTrafficUpdate")
     @ResponseBody
-    public ResponseEntity<Object> addTrafficUpdate(@RequestBody String payload, HttpServletRequest request,HttpServletResponse response) {
-        if(request.getMethod().equals(RequestMethod.OPTIONS)){
+    public ResponseEntity<Object> addTrafficUpdate(@RequestBody String payload, HttpServletRequest request, HttpServletResponse response) {
+        if (request.getMethod().equals(RequestMethod.OPTIONS)) {
             return ResponseEntity.status(HttpStatus.OK).body("");
         }
 
         logger.info("Flock Event Received [{}] ", payload);
-        return ResponseEntity.status(HttpStatus.OK).body("HI");
+        String responseMsg = StringUtils.EMPTY;
+        boolean responseStatus = flockEventService.processTrafficUpdateRequest(payload, true);
+
+        if (responseStatus) {
+            responseMsg = "Traffic Update Set Successfully";
+        } else {
+            responseMsg = "Unable to Set Traffic Update ";
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseMsg);
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(responseMsg);
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/getUpdateList")

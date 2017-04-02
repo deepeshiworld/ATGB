@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -48,39 +49,53 @@ public class FlockEventService {
         return false;
     }
 
-    public boolean processTrafficUpdateRequest(String payload) {
-
+    public boolean processTrafficUpdateRequest(String payload, boolean useCoordinates) {
+        MapRouteFinder finder;
+        TrafficReminderDto reminderDto = new TrafficReminderDto();
         try {
             SlashEvent slashEvent = new SlashEvent();
             slashEvent = slashEvent.fromJson(payload);
 
-            String slashEventText = slashEvent.getText();
-            if (StringUtils.isNotBlank(slashEventText)) {
 
-                TrafficReminderDto reminderDto = new TrafficReminderDto();
-                reminderDto.parse(slashEventText);
+//            if (StringUtils.isNotBlank(slashEventText)) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm");
+            Date d = format.parse(slashEvent.getFinalTimeToReach());
 
-                // If arrivalDate has been passed
-                if (reminderDto.getFinalDestinationDate().before(new Date())) {
-                    logger.error("Time has passed , cannot set alarm");
-                    return false;
-                }
-                MapRouteFinder finder = MapRouteFinder.createRouteFinder(reminderDto.getSource(), reminderDto.getDestination());
+            reminderDto.setFinalDestinationDate(d);
 
-                MapRoute bestRouteByDuration = finder.getBestRouteByDuration();
-                slashEvent.setTimenTakenSec(bestRouteByDuration.getDuration());
-                slashEvent.setActive(true);
-                slashEvent.setAlarmTs(reminderDto.getFinalDestinationDate().getTime());
-                slashEvent.setSourceName(bestRouteByDuration.getSourceName());
-                slashEvent.setDestinationName(bestRouteByDuration.getDestinationName());
-                slashEvent.setFinalTimeToReach(reminderDto.getFinalDestinationDate().toString());
+            //TODO
+            //slashEvent.setAlarmTs(reminderDto.getFinalDestinationDate().getTime());
 
-                // Save to DB
-                flockDbService.addTrafficDataInDB(slashEvent);
-
-                // Set ReminderTask
-                return setTimer(bestRouteByDuration, slashEvent, reminderDto);
+            // If arrivalDate has been passed
+            if (reminderDto.getFinalDestinationDate().before(new Date())) {
+                logger.error("Time has passed , cannot set alarm");
+                return false;
             }
+
+            if (useCoordinates) {
+                finder = MapRouteFinder.createRouteFinder(slashEvent.getSourceLat(), slashEvent.getSourceLng(), slashEvent.getDestinationLat(), slashEvent.getDestinationLng());
+                reminderDto.fill(slashEvent);
+            } else {
+                String slashEventText = slashEvent.getText();
+                reminderDto.parse(slashEventText);
+                finder = MapRouteFinder.createRouteFinder(reminderDto.getSource(), reminderDto.getDestination());
+            }
+            slashEvent.setAlarmTs(reminderDto.getFinalDestinationDate().getTime());
+            slashEvent.setFinalTimeToReach(reminderDto.getFinalDestinationDate().toString());
+
+            MapRoute bestRouteByDuration = finder.getBestRouteByDuration();
+            slashEvent.setTimenTakenSec(bestRouteByDuration.getDuration());
+            slashEvent.setActive(true);
+            slashEvent.setSourceName(bestRouteByDuration.getSourceName());
+            slashEvent.setDestinationName(bestRouteByDuration.getDestinationName());
+
+
+            // Save to DB
+            flockDbService.addTrafficDataInDB(slashEvent);
+
+            // Set ReminderTask
+            return setTimer(bestRouteByDuration, slashEvent, reminderDto, useCoordinates);
+            //}
 
 
         } catch (Exception e) {
@@ -91,7 +106,7 @@ public class FlockEventService {
 
     }
 
-    private boolean setTimer(MapRoute bestRouteByDuration, SlashEvent slashEvent, TrafficReminderDto reminderDto) {
+    private boolean setTimer(MapRoute bestRouteByDuration, SlashEvent slashEvent, TrafficReminderDto reminderDto, boolean useCoordinates) {
 
         Long bestRouteByDurationSec = bestRouteByDuration.getDuration();
         // e.g. 4pm
@@ -104,17 +119,15 @@ public class FlockEventService {
 
         if (departureTime.getMillis() < nowDate.getMillis()) {
             logger.info("Traffic Update Cannot be set for the user");
-            CommonUtils.sendNotification(bestRouteByDuration, slashEvent, reminderDto);
+            CommonUtils.sendNotification(bestRouteByDuration, slashEvent, reminderDto.getFinalDestinationDate());
+            Map<String, Object> queryParams = new HashMap<String, Object>();
+            queryParams.put("userId", slashEvent.getUserId());
+            queryParams.put("alarmTs", slashEvent.getAlarmTs());
+            CommonUtils.delete(queryParams);
             return true;
         }
         // Add 1
-        TrafficReminder.addTaskToTimer(new ReminderTask(slashEvent, reminderDto), departureTime.toDate());
-
-        // Add 2
-        //TrafficReminder.addTaskToTimer(new ReminderTask(slashEvent, reminderDto), departureTime.minusMinutes(10).toDate());
-
-        // Add 3
-        //TrafficReminder.addTaskToTimer(new ReminderTask(slashEvent, reminderDto), departureTime.plusMinutes(10).toDate());
+        TrafficReminder.addTaskToTimer(new ReminderTask(slashEvent, reminderDto, useCoordinates), departureTime.toDate());
 
         return true;
     }

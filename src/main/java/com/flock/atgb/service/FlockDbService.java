@@ -63,7 +63,6 @@ public class FlockDbService {
                 Map<String, Object> uParams = new HashMap<String, Object>();
                 uParams.put("$set", dbObj);
 
-                //mongoDBManager.addObject(FlockConstants.USER, flockUser.toJson());
                 mongoDBManager.updateObject(FlockConstants.USER, queryParams, uParams, upsert, false);
             }
         } catch (Exception e) {
@@ -71,6 +70,19 @@ public class FlockDbService {
             return false;
         }
         return true;
+    }
+
+    public boolean delete(Map<String, Object> paramsMap) {
+        try {
+
+            BasicDBObject dbObj = new BasicDBObject();
+            dbObj.putAll(paramsMap);
+
+            return mongoDBManager.deleteObject(FlockConstants.TRAFFIC_DB, dbObj);
+        } catch (Exception e) {
+            logger.error("Error creating MyAirtelAppUserPreferences for : " + ". Error : " + e.getMessage(), e);
+            return false;
+        }
     }
 
     public FlockUser getUserFromUserId(String userId) {

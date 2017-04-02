@@ -6,8 +6,10 @@ import co.flock.model.message.attachments.Attachment;
 import co.flock.model.message.attachments.HtmlView;
 import co.flock.model.message.attachments.View;
 import com.flock.atgb.com.flock.atgb.google.MapRoute;
+import com.flock.atgb.db.MongoDBManager;
+import com.flock.atgb.dto.MongoDBConfig;
 import com.flock.atgb.dto.SlashEvent;
-import com.flock.atgb.dto.TrafficReminderDto;
+import com.mongodb.BasicDBObject;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -18,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by B0095829 on 4/1/17.
@@ -27,13 +30,13 @@ public class CommonUtils {
     private static final Logger logger = LoggerFactory.getLogger(CommonUtils.class.getCanonicalName());
     private static String pattern = "yyyy-MM-dd HH:mm";
 
-    public static void sendNotification(MapRoute bestRouteByDuration, SlashEvent slashEvent, TrafficReminderDto reminderDto) {
+    public static void sendNotification(MapRoute bestRouteByDuration, SlashEvent slashEvent, Date finalDestinationDate) {
 
         Long currentTimeTakenSec = bestRouteByDuration.getDuration();
 
         DateTime nowDate = new DateTime();
         DateTime currEstimateDate = nowDate.plusSeconds(currentTimeTakenSec.intValue());
-        DateTime finalDestDate = new DateTime(reminderDto.getFinalDestinationDate());
+        DateTime finalDestDate = new DateTime(finalDestinationDate);
 
         String inlineHtml = getInlineHtml(bestRouteByDuration);
 
@@ -134,7 +137,7 @@ public class CommonUtils {
     }
 
 
-    public static String getInlineHtml(String uid ) {
+    public static String getInlineHtml(String uid) {
         String displayHtml = CommonUtils.getDataFromFile("src/main/resources/locationSelector.html");
         displayHtml = displayHtml.replace("USER_ID", uid);
 
@@ -142,23 +145,51 @@ public class CommonUtils {
     }
 
     public static String getUpdateListHtml(List<SlashEvent> upcomingTrafficUpdates) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<!doctype html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Traffic Update</title><link href=\"https://api.myairtelapp.bsbportal.in/web/css/jackpot.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"https://api.myairtelapp.bsbportal.in/web/js/jquery.min.js\"></script></head><body><section class=\"body-block\"><div class=\"top-header\">");
-        builder.append("<p class=\"header\">" + upcomingTrafficUpdates.get(0).getUserName() + " : Upcoming Traffic Update Events</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
+        if(upcomingTrafficUpdates.size() != 0) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("<!doctype html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Traffic Update</title><link href=\"https://api.myairtelapp.bsbportal.in/web/css/jackpot.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"https://api.myairtelapp.bsbportal.in/web/js/jquery.min.js\"></script></head><body><section class=\"body-block\"><div class=\"top-header\">");
+            builder.append("<p class=\"header\">" + upcomingTrafficUpdates.get(0).getUserName() + " : Upcoming Traffic Update Events</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
 
 
-        for (SlashEvent slashEvent : upcomingTrafficUpdates) {
+            for (SlashEvent slashEvent : upcomingTrafficUpdates) {
 
-            long minutes = (slashEvent.getTimenTakenSec() % 3600) / 60;
-            String reachTime = minutes + "";
+                long minutes = (slashEvent.getTimenTakenSec() % 3600) / 60;
+                String reachTime = minutes + "";
             /*TrafficReminderDto reminderDto = new TrafficReminderDto();
             reminderDto.parse(slashEvent.getText());
             Date finalTimeToReach = reminderDto.getFinalDestinationDate();*/
-            String finalTimeToReach = slashEvent.getFinalTimeToReach();
-            builder.append("<article class=\"data-block\"><div class=\"inner-header\"><div class=\"refer red\"><span class=\"icon\"><img src=\"https://cdn0.iconfinder.com/data/icons/geo-points/154/time-512.png\" width=\"25\" alt=\"refer\"></span><p>" + slashEvent.getSourceName() + "->" + slashEvent.getDestinationName() + "</p></div><div class=\"data\"><span class=\"mb\"><a href=\"#\">" + reachTime + "</a></span></div></div><div class=\"content\">Time to Reach:" + finalTimeToReach + "</div></article>");
-        }
-        builder.append("</section></div></body></html>");
+                String finalTimeToReach = slashEvent.getFinalTimeToReach();
+                builder.append("<article class=\"data-block\"><div class=\"inner-header\"><div class=\"refer red\"><span class=\"icon\"><img src=\"https://cdn0.iconfinder.com/data/icons/geo-points/154/time-512.png\" width=\"25\" alt=\"refer\"></span><p style=\"font-size:10px;white-space:pre-wrap;text-align:justify;padding:0px;\">" + slashEvent.getSourceName() + " -> " + slashEvent.getDestinationName() + "</p></div><div class=\"data\"><span class=\"mb\"><a href=\"#\">" + reachTime + " minutes</a></span></div></div><div class=\"content\">Time to Reach:" + finalTimeToReach + "</div></article>");
+            }
+            builder.append("</section></div></body></html>");
 
-        return builder.toString();
+            return builder.toString();
+        }else{
+            StringBuilder builder = new StringBuilder();
+            builder.append("<!doctype html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Traffic Update</title><link href=\"https://api.myairtelapp.bsbportal.in/web/css/jackpot.css\" type=\"text/css\" rel=\"stylesheet\"><script src=\"https://api.myairtelapp.bsbportal.in/web/js/jquery.min.js\"></script></head><body><section class=\"body-block\"><div class=\"top-header\">");
+            builder.append("<p class=\"header\"> No Updates Available</p><div class=\"table\"><div class=\"data-consumed\"><span class=\"grey\"></span><span class=\"green\"></span></div></div></div><div id=\"top-div\">");
+
+            return builder.toString();
+        }
+    }
+
+
+    public static boolean delete(Map<String, Object> paramsMap) {
+        try {
+            MongoDBConfig config = new MongoDBConfig();
+            config.setMongoDBName(FlockConstants.FLOCK_DB);
+            config.setMongodbHost("127.0.0.1");
+            config.setMongodbPort(27017);
+            config.setMongodbThreadsAllowedToBlock(50);
+            config.setMongodbConnectionsPerHost(500);
+            MongoDBManager mongoDBManager = new MongoDBManager(config);
+            BasicDBObject dbObj = new BasicDBObject();
+            dbObj.putAll(paramsMap);
+
+            return mongoDBManager.deleteObject(FlockConstants.TRAFFIC_DB, dbObj);
+        } catch (Exception e) {
+            logger.error("Error creating MyAirtelAppUserPreferences for : " + ". Error : " + e.getMessage(), e);
+            return false;
+        }
     }
 }

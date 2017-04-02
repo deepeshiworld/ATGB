@@ -14,6 +14,13 @@ public class TrafficReminderDto {
 
     private String source;
     private String destination;
+
+    private double sourceLat;
+    private double sourceLng;
+    private double destinationLat;
+    private double destinationLng;
+
+
     private Date arrivalDate;
 
     public String getSource() {
@@ -36,8 +43,40 @@ public class TrafficReminderDto {
         return arrivalDate;
     }
 
-    public void setArrivalDate(Date arrivalDate) {
+    public void setFinalDestinationDate(Date arrivalDate) {
         this.arrivalDate = arrivalDate;
+    }
+
+    public double getSourceLat() {
+        return sourceLat;
+    }
+
+    public void setSourceLat(double sourceLat) {
+        this.sourceLat = sourceLat;
+    }
+
+    public double getSourceLng() {
+        return sourceLng;
+    }
+
+    public void setSourceLng(double sourceLng) {
+        this.sourceLng = sourceLng;
+    }
+
+    public double getDestinationLat() {
+        return destinationLat;
+    }
+
+    public void setDestinationLat(double destinationLat) {
+        this.destinationLat = destinationLat;
+    }
+
+    public double getDestinationLng() {
+        return destinationLng;
+    }
+
+    public void setDestinationLng(double destinationLng) {
+        this.destinationLng = destinationLng;
     }
 
     public void parse(String data) {
@@ -55,5 +94,12 @@ public class TrafficReminderDto {
             e.printStackTrace();
         }
 
+    }
+
+    public void fill(SlashEvent slashEvent){
+        this.setSourceLat(slashEvent.getSourceLat());
+        this.setSourceLng(slashEvent.getSourceLng());
+        this.setDestinationLat(slashEvent.getSourceLat());
+        this.setDestinationLng(slashEvent.getDestinationLng());
     }
 }
