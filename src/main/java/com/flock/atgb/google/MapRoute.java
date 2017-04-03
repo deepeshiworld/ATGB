@@ -1,6 +1,4 @@
-package com.flock.atgb.com.flock.atgb.google;
-
-import com.google.maps.model.Distance;
+package com.flock.atgb.google;
 
 /**
  * Created by amber on 01-04-2017.

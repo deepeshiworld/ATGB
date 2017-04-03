@@ -1,7 +1,7 @@
 package com.flock.atgb.service;
 
-import com.flock.atgb.com.flock.atgb.google.MapRoute;
-import com.flock.atgb.com.flock.atgb.google.MapRouteFinder;
+import com.flock.atgb.google.MapRoute;
+import com.flock.atgb.google.MapRouteFinder;
 import com.flock.atgb.dto.SlashEvent;
 import com.flock.atgb.dto.TrafficReminderDto;
 import com.flock.atgb.exception.FlockException;

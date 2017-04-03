@@ -1,10 +1,10 @@
 package com.flock.atgb.service;
 
-import com.flock.atgb.com.flock.atgb.google.MapRoute;
-import com.flock.atgb.com.flock.atgb.google.MapRouteFinder;
 import com.flock.atgb.dto.FlockUser;
 import com.flock.atgb.dto.SlashEvent;
 import com.flock.atgb.dto.TrafficReminderDto;
+import com.flock.atgb.google.MapRoute;
+import com.flock.atgb.google.MapRouteFinder;
 import com.flock.atgb.util.CommonUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -42,7 +42,6 @@ public class FlockEventService {
             params.put("token", flockUser.getToken());
             params.put("isActive", flockUser.isActive());
             return flockDbService.updateUserInDb(flockUser, params, true);
-//            return flockDbService.addUserInDb(flockUser);
         } catch (JsonSyntaxException e) {
             e.printStackTrace();
         }
@@ -51,20 +50,20 @@ public class FlockEventService {
 
     public boolean processTrafficUpdateRequest(String payload, boolean useCoordinates) {
         MapRouteFinder finder;
-        TrafficReminderDto reminderDto = new TrafficReminderDto();
+        TrafficReminderDto reminderDto = null;
+        SlashEvent slashEvent;
         try {
-            SlashEvent slashEvent = new SlashEvent();
+
+            slashEvent = new SlashEvent();
             slashEvent = slashEvent.fromJson(payload);
 
+            if (useCoordinates) {
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm");
+                Date d = format.parse(slashEvent.getFinalTimeToReach());
 
-//            if (StringUtils.isNotBlank(slashEventText)) {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm");
-            Date d = format.parse(slashEvent.getFinalTimeToReach());
-
-            reminderDto.setFinalDestinationDate(d);
-
-            //TODO
-            //slashEvent.setAlarmTs(reminderDto.getFinalDestinationDate().getTime());
+                reminderDto = new TrafficReminderDto();
+                reminderDto.setFinalDestinationDate(d);
+            }
 
             // If arrivalDate has been passed
             if (reminderDto.getFinalDestinationDate().before(new Date())) {
@@ -89,14 +88,11 @@ public class FlockEventService {
             slashEvent.setSourceName(bestRouteByDuration.getSourceName());
             slashEvent.setDestinationName(bestRouteByDuration.getDestinationName());
 
-
             // Save to DB
             flockDbService.addTrafficDataInDB(slashEvent);
 
             // Set ReminderTask
             return setTimer(bestRouteByDuration, slashEvent, reminderDto, useCoordinates);
-            //}
-
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -120,6 +116,7 @@ public class FlockEventService {
         if (departureTime.getMillis() < nowDate.getMillis()) {
             logger.info("Traffic Update Cannot be set for the user");
             CommonUtils.sendNotification(bestRouteByDuration, slashEvent, reminderDto.getFinalDestinationDate());
+
             Map<String, Object> queryParams = new HashMap<String, Object>();
             queryParams.put("userId", slashEvent.getUserId());
             queryParams.put("alarmTs", slashEvent.getAlarmTs());

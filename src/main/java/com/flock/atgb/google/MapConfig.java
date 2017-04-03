@@ -1,4 +1,4 @@
-package com.flock.atgb.com.flock.atgb.google;
+package com.flock.atgb.google;
 
 import com.google.maps.GeoApiContext;
 

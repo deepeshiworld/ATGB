@@ -5,7 +5,7 @@ import co.flock.model.message.Message;
 import co.flock.model.message.attachments.Attachment;
 import co.flock.model.message.attachments.HtmlView;
 import co.flock.model.message.attachments.View;
-import com.flock.atgb.com.flock.atgb.google.MapRoute;
+import com.flock.atgb.google.MapRoute;
 import com.flock.atgb.db.MongoDBManager;
 import com.flock.atgb.dto.MongoDBConfig;
 import com.flock.atgb.dto.SlashEvent;

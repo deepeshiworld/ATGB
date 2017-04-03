@@ -2,11 +2,11 @@ package com.flock.atgb.handler;
 
 import co.flock.FlockApiClient;
 import co.flock.model.message.Message;
-import com.flock.atgb.com.flock.atgb.google.MapRoute;
-import com.flock.atgb.com.flock.atgb.google.MapRouteFinder;
 import com.flock.atgb.dto.FlockEvent;
 import com.flock.atgb.dto.SlashEvent;
 import com.flock.atgb.exception.FlockException;
+import com.flock.atgb.google.MapRoute;
+import com.flock.atgb.google.MapRouteFinder;
 import com.flock.atgb.service.FlockEventService;
 import com.flock.atgb.util.CommonUtils;
 import com.flock.atgb.util.FlockConstants;
@@ -151,26 +151,11 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
 
     @RequestMapping(method = RequestMethod.GET, value = "/getUpdateList")
     public ResponseEntity<String> getSlashEvents(HttpServletRequest request) {
-        String queryString = request.getQueryString();
+//        String queryString = request.getQueryString();
         Map<String, String[]> parameterMap = request.getParameterMap();
 
-        String[] flockEventJson;
-        JSONObject flockEventObject = null;
-        for (String key : parameterMap.keySet()) {
+        JSONObject flockEventObject = getFlockEventPayload(parameterMap);
 
-            if (key.equals("flockEvent")) {
-                flockEventJson = parameterMap.get(key);
-                String jObj = flockEventJson[0];
-                JSONParser parser = new JSONParser();
-                try {
-                    flockEventObject = (JSONObject) parser.parse(jObj);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                break;
-            }
-        }
-        logger.info(flockEventObject.toJSONString());
         String userId = (String) flockEventObject.get("userId");
         List<SlashEvent> upcomingTrafficUpdates = flockEventService.getUpcomingTrafficUpdates(userId);
         String updateListHtml = CommonUtils.getUpdateListHtml(upcomingTrafficUpdates);
@@ -179,25 +164,11 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
 
     @RequestMapping(method = RequestMethod.GET, value = "/getLocationSelector")
     public ResponseEntity<String> getLocationSelector(HttpServletRequest request) {
-        String queryString = request.getQueryString();
+//        String queryString = request.getQueryString();
         Map<String, String[]> parameterMap = request.getParameterMap();
 
-        String[] flockEventJson;
-        JSONObject flockEventObject = null;
-        for (String key : parameterMap.keySet()) {
+        JSONObject flockEventObject = getFlockEventPayload(parameterMap);
 
-            if (key.equals("flockEvent")) {
-                flockEventJson = parameterMap.get(key);
-                String jObj = flockEventJson[0];
-                JSONParser parser = new JSONParser();
-                try {
-                    flockEventObject = (JSONObject) parser.parse(jObj);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                break;
-            }
-        }
         logger.info(flockEventObject.toJSONString());
         String userId = (String) flockEventObject.get("userId");
 
@@ -234,6 +205,28 @@ public class ATGBApplication implements IAuthenticatedUrlRequestHandler {
         }
 
         return ResponseEntity.ok("Hey There, ATGB");
+    }
+
+    private JSONObject getFlockEventPayload(Map<String, String[]> parameterMap) {
+        JSONObject flockEventObject = null;
+        String[] flockEventJson;
+        for (String key : parameterMap.keySet()) {
+
+            if (key.equals("flockEvent")) {
+                flockEventJson = parameterMap.get(key);
+                String jObj = flockEventJson[0];
+                JSONParser parser = new JSONParser();
+                try {
+                    flockEventObject = (JSONObject) parser.parse(jObj);
+                    logger.info(flockEventObject.toJSONString());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
+        }
+
+        return flockEventObject;
     }
 
     @Override
